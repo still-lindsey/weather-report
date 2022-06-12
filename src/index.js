@@ -37,19 +37,6 @@ const switchFAndC = () => {
   }
 }
 
-const state = {
-  tempMetric: "F",
-  temperatureF: 60,
-  temperatureC: 15.5568,
-  cityName: 'Tokyo',
-  weatherDescription: "scattered clouds",
-  weatherIconName: "bi-cloud-lightning-rain",
-  oldIconName: null,
-  skyImgUrl: null,
-  currentLat: null,
-  currentLon: null 
-}
-
 const imgObject = {
   rainSky: require('/ada-project-docs/assets/rain_sky.jpg'), 
   cloudsSky: require('/ada-project-docs/assets/broken_clouds_sky.jpg'), 
@@ -64,14 +51,27 @@ const imgObject = {
   hottestLandscape: require('/ada-project-docs/assets/hottest_landscape.png')
 };
 
+const state = {
+  tempMetric: "F",
+  temperatureF: 60,
+  temperatureC: 15.5568,
+  cityName: 'Tokyo',
+  weatherDescription: "broken clouds",
+  weatherIconName: "none",
+  oldIconName: "none",
+  skyImg: imgObject['cloudsSky'],
+  landscapeImg: imgObject['springLandscape'],
+  currentLat: null,
+  currentLon: null 
+}
+
 const weatherMainToIcon = {"THUNDERSTORM": ["bi-cloud-lightning-rain", imgObject['thunderstormSky']], "DRIZZLE": ["bi-cloud-drizzle", imgObject['rainSky']], "RAIN": ["bi-cloud-rain", imgObject['rainSky']], "SNOW": ["bi-cloud-snow", imgObject['snowSky']], "MIST": ["bi-cloud-haze", imgObject['mistSky']], "SMOKE": ["bi-cloud-fog", imgObject['mistSky']], "HAZE": ["bi-cloud-haze", imgObject['mistSky']], "DUST": ["bi-cloud-fog", imgObject['mistSky']], "FOG": ["bi-cloud-haze", imgObject['mistSky']], "SAND": ["bi-cloud-fog", imgObject['mistSky']], "DUST": ["bi-cloud-fog", imgObject['mistSky']], "ASH": ["bi-cloud-fog", imgObject['mistSky']], "SQUALL": ["bi-cloud-fog", imgObject['mistSky']], "TORNADO": ["bi-cloud-fog", imgObject['mistSky']], "CLEAR": ["bi-sun", imgObject['clearSky']], "CLOUDS": ['bi-clouds', imgObject['cloudsSky']]}
 
 const displayWeatherAtLocation = () => {
+
   navigator.geolocation.getCurrentPosition((position) => {
-    const latitude = position.coords.latitude;
-    const longitude = position.coords.longitude;
-    state.currentLat = latitude;
-    state.currentLon = longitude;
+    state.currentLat = position.coords.latitude;
+    state.currentLon = position.coords.longitude;
     console.log("got geolocation", position)
     axios.get("https://weather-report-server.herokuapp.com/weather", {
         params: {
@@ -81,13 +81,7 @@ const displayWeatherAtLocation = () => {
       })
       .then((weatherResponse) => {
         //Store response data
-        console.log(weatherResponse.data)
-        state.temperatureF = Math.round(weatherResponse.data.current.temp)
-        state.temperatureC = FToC(state.temperatureF)
-        state.weatherDescription = weatherResponse.data.current.weather[0].description;
-        state.oldIconName = state.weatherIconName;
-        state.weatherIconName = weatherMainToIcon[weatherResponse.data.current.weather[0].main.toUpperCase()][0];
-        state.skyImgUrl = weatherMainToIcon[weatherResponse.data.current.weather[0].main.toUpperCase()][1];
+        updateState(weatherResponse);
         console.log('successfully stored response data!', weatherResponse.data);
         axios.get("https://weather-report-server.herokuapp.com/city", {
           params: {
@@ -99,14 +93,8 @@ const displayWeatherAtLocation = () => {
           console.log("got the city name", cityResponse.data)
 
           state.cityName = cityResponse.data.address.city || cityResponse.data.address.region || cityResponse.data.address.county
-                  //Update UI
-          document.getElementById("temp").innerHTML = `${state.temperatureF}&deg;`;
-          checkTextColorChange();
-          checkSeasonChange();
-          setWeatherIcon()
-          setSky();
-          setWeatherDescription();
-          document.getElementById("city-name").textContent = state.cityName
+          //Update UI
+          updateUI();
           console.log('successfully updated UI!');
 
         })
@@ -117,6 +105,14 @@ const displayWeatherAtLocation = () => {
       .catch((error) => {
         console.log('error!', error)
       });
+  }, (error) => {
+    if (error.code === error.PERMISSION_DENIED) {
+      state.weatherIconName = "bi-clouds"
+      updateUI();
+      console.log("Location permission denied");
+      setTimeout(() => 
+      window.alert("Enable browser location access or type your city/region in the dropdown search to access current local weather information."), 2000)
+    };
   });
 };
 
@@ -158,7 +154,7 @@ const checkTextColorChange = () => {
 };
 
 const changeCity = () => {
-  state.cityName = document.getElementById("city-search-input").value;
+  state.cityName = document.getElementById("city-search-input").value || state.cityName;
   document.getElementById("city-name").textContent = state.cityName;
 };
 
@@ -196,15 +192,17 @@ const changeWeatherAsync = async () => {
 
 const updateState = (weatherResponse) => {
   state.temperatureF = Math.round(weatherResponse.data.current.temp);
+  state.temperatureC = FToC(state.temperatureF);
   state.weatherDescription = weatherResponse.data.current.weather[0].description;
   state.oldIconName = state.weatherIconName;
   state.weatherIconName = weatherMainToIcon[weatherResponse.data.current.weather[0].main.toUpperCase()][0];
-  state.skyImgUrl = weatherMainToIcon[weatherResponse.data.current.weather[0].main.toUpperCase()][1];
+  state.skyImg = weatherMainToIcon[weatherResponse.data.current.weather[0].main.toUpperCase()][1];
   console.log('successfully stored response data!', weatherResponse.data);
 }
 
 const updateUI = () => {
   document.getElementById("temp").innerHTML = `${state.temperatureF}&deg;`;
+  changeCity();
   checkTextColorChange();
   checkSeasonChange();
   setWeatherIcon();
@@ -214,7 +212,7 @@ const updateUI = () => {
 }
 
 const setSky = () => {
-  document.body.style.background = `url(${state.skyImgUrl}) no-repeat top fixed`;
+  document.body.style.background = `url(${state.skyImg}) no-repeat top fixed`;
   document.body.style.backgroundSize = '100% 100%';
 }
 const setWeatherIcon = () => {
@@ -228,7 +226,7 @@ const setWeatherDescription = () => {
 const toggleSky = (condition) => {
   state.weatherDescription = condition; 
   setWeatherDescription();
-  state.skyImgUrl = weatherMainToIcon[condition.toUpperCase()][1];
+  state.skyImg = weatherMainToIcon[condition.toUpperCase()][1];
   setSky();
   state.oldIconName = state.weatherIconName;
   state.weatherIconName = weatherMainToIcon[condition.toUpperCase()][0];
@@ -258,7 +256,7 @@ const toggleSky = (condition) => {
     //   state.weatherDescription = response.data.current.weather[0].description;
     //   state.oldIconName = state.weatherIconName;
     //   state.weatherIconName = weatherMainToIcon[response.data.current.weather[0].main][0];
-    //   state.skyImgUrl = weatherMainToIcon[response.data.current.weather[0].main][1];
+    //   state.skyImg = weatherMainToIcon[response.data.current.weather[0].main][1];
     //   console.log('successfully stored response data!', response.data);
     // })
     // .then(() => {

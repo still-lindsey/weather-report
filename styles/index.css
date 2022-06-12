@@ -17,7 +17,7 @@ html{
 }
 
 body{
-	background:url(/ada-project-docs/assets/broken_clouds_sky.jpg) no-repeat top fixed;
+	background:white;
 	background-size: 100% 70%;
 	height: 100vh;
 	width: 100vw;
@@ -42,10 +42,10 @@ footer img{
 
 .main-box {
 	margin: auto;
-	width: 36%;
-	height: auto;
+	width: fit-content;
+	min-width: 30%;
+	height: fit-content;
 	align-self: center;
-	min-width: 300px;
 	background-color: var(--boxBackground);
 	border-radius: 3px;
 	border: 2px solid #009688;
@@ -111,6 +111,10 @@ input{
 }
 
 .temperature-box{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-content: center;
 	margin-top: 5%;
 	margin-bottom: 5%;
 }
@@ -216,5 +220,9 @@ input{
 	background-color: #009688;
 }
 
+#toggle-f-c{
+	width: min-content;
+	align-self: center;
+}
 
 .show {display:block;}
