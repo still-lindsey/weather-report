@@ -37,8 +37,6 @@ const switchFAndC = () => {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {registerEventHandlers(); displayWeatherAtLocation();});
-
 const state = {
   tempMetric: "F",
   temperatureF: 60,
@@ -52,7 +50,21 @@ const state = {
   currentLon: null 
 }
 
-const weatherMainToIcon = {"THUNDERSTORM": ["bi-cloud-lightning-rain", "/ada-project-docs/assets/thunderstorm_sky.jpg"], "DRIZZLE": ["bi-cloud-drizzle", "/ada-project-docs/assets/rain_sky.jpg"], "RAIN": ["bi-cloud-rain", "/ada-project-docs/assets/rain_sky.jpg"], "SNOW": ["bi-cloud-snow", "/ada-project-docs/assets/snow_sky.jpg"], "MIST": ["bi-cloud-haze", "/ada-project-docs/assets/mist_sky.jpg"], "SMOKE": ["bi-cloud-fog", "/ada-project-docs/assets/mist_sky.jpg"], "HAZE": ["bi-cloud-haze", "/ada-project-docs/assets/mist_sky.jpg"], "DUST": ["bi-cloud-fog", "/ada-project-docs/assets/mist_sky.jpg"], "FOG": ["bi-cloud-haze", "/ada-project-docs/assets/mist_sky.jpg"], "SAND": ["bi-cloud-fog", "/ada-project-docs/assets/mist_sky.jpg"], "DUST": ["bi-cloud-fog", "/ada-project-docs/assets/mist_sky.jpg"], "ASH": ["bi-cloud-fog", "/ada-project-docs/assets/mist_sky.jpg"], "SQUALL": ["bi-cloud-fog", "/ada-project-docs/assets/mist_sky.jpg"], "TORNADO": ["bi-cloud-fog", "/ada-project-docs/assets/mist_sky.jpg"], "CLEAR": ["bi-sun", "/ada-project-docs/assets/clear_sky.jpg"], "CLOUDS": ['bi-clouds', "/ada-project-docs/assets/broken_clouds_sky.jpg"]}
+const imgObject = {
+  rainSky: require('/ada-project-docs/assets/rain_sky.jpg'), 
+  cloudsSky: require('/ada-project-docs/assets/broken_clouds_sky.jpg'), 
+  thunderstormSky: require('/ada-project-docs/assets/thunderstorm_sky.jpg'), 
+  clearSky: require('/ada-project-docs/assets/clear_sky.jpg'), 
+  mistSky: require('/ada-project-docs/assets/mist_sky.jpg'), 
+  snowSky: require('/ada-project-docs/assets/snow_sky.jpg'), 
+  winterLandscape: require('/ada-project-docs/assets/winter_landscape.png'), 
+  summerLandscape: require('/ada-project-docs/assets/summer_landscape.png'), 
+  springLandscape: require('/ada-project-docs/assets/spring_landscape.png'), 
+  fallLandscape: require('/ada-project-docs/assets/fall_landscape.png'), 
+  hottestLandscape: require('/ada-project-docs/assets/hottest_landscape.png')
+};
+
+const weatherMainToIcon = {"THUNDERSTORM": ["bi-cloud-lightning-rain", imgObject['thunderstormSky']], "DRIZZLE": ["bi-cloud-drizzle", imgObject['rainSky']], "RAIN": ["bi-cloud-rain", imgObject['rainSky']], "SNOW": ["bi-cloud-snow", imgObject['snowSky']], "MIST": ["bi-cloud-haze", imgObject['mistSky']], "SMOKE": ["bi-cloud-fog", imgObject['mistSky']], "HAZE": ["bi-cloud-haze", imgObject['mistSky']], "DUST": ["bi-cloud-fog", imgObject['mistSky']], "FOG": ["bi-cloud-haze", imgObject['mistSky']], "SAND": ["bi-cloud-fog", imgObject['mistSky']], "DUST": ["bi-cloud-fog", imgObject['mistSky']], "ASH": ["bi-cloud-fog", imgObject['mistSky']], "SQUALL": ["bi-cloud-fog", imgObject['mistSky']], "TORNADO": ["bi-cloud-fog", imgObject['mistSky']], "CLEAR": ["bi-sun", imgObject['clearSky']], "CLOUDS": ['bi-clouds', imgObject['cloudsSky']]}
 
 const displayWeatherAtLocation = () => {
   navigator.geolocation.getCurrentPosition((position) => {
@@ -108,6 +120,8 @@ const displayWeatherAtLocation = () => {
   });
 };
 
+document.addEventListener('DOMContentLoaded', () => {registerEventHandlers(); displayWeatherAtLocation();});
+
 const changeTemp = (change) => {
   state.temperatureF += change
   document.getElementById("temp").innerHTML = `${state.temperatureF}&deg;`;
@@ -117,15 +131,15 @@ const changeTemp = (change) => {
 
 const checkSeasonChange = () => {
   if (state.temperatureF <= 32){
-    document.getElementById("temp-img").src = "/ada-project-docs/assets/winter_landscape.png";
+    document.getElementById("temp-img").src = imgObject['winterLandscape'];
   } else if (32 < state.temperatureF && state.temperatureF < 56){
-    document.getElementById("temp-img").src = "/ada-project-docs/assets/fall_landscape.png";
+    document.getElementById("temp-img").src = imgObject['fallLandscape'];
   } else if (56 <= state.temperatureF  && state.temperatureF < 75){
-    document.getElementById("temp-img").src = "/ada-project-docs/assets/spring_landscape.png";
+    document.getElementById("temp-img").src = imgObject['springLandscape'];
   } else if (75 <= state.temperatureF  && state.temperatureF < 95) {
-    document.getElementById("temp-img").src = "/ada-project-docs/assets/summer_landscape.png";
+    document.getElementById("temp-img").src = imgObject['summerLandscape'];
   }else {
-    document.getElementById("temp-img").src = "/ada-project-docs/assets/hottest_landscape.png";
+    document.getElementById("temp-img").src = imgObject['hottestLandscape'];
   }
 };
 
@@ -220,8 +234,6 @@ const toggleSky = (condition) => {
   state.weatherIconName = weatherMainToIcon[condition.toUpperCase()][0];
   setWeatherIcon();
 };
-
-
 // const changeWeather = () => {
 //   const q = state.cityName;
 
