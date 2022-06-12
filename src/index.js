@@ -29,11 +29,10 @@ const CToF = (C) => {
 const switchFAndC = () => {
   if (state.tempMetric === "F"){
     state.tempMetric = "C"
-    state.temperatureC = Math.round(FToC(state.temperatureF))
-    document.getElementById("temp").innerHTML = `${state.temperatureC}&deg;`;
+    setTemp();
   }else{
     state.tempMetric = "F"
-    document.getElementById("temp").innerHTML = `${state.temperatureF}&deg;`;
+    setTemp();
   }
 }
 
@@ -118,7 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {registerEventHandlers(); di
 
 const changeTemp = (change) => {
   state.temperatureF += change
-  document.getElementById("temp").innerHTML = `${state.temperatureF}&deg;`;
+  state.temperatureC = FToC(state.temperatureF)
+  setTemp();
   checkTextColorChange();
   checkSeasonChange();
 };
@@ -199,7 +199,7 @@ const updateState = (weatherResponse) => {
 }
 
 const updateUI = () => {
-  document.getElementById("temp").innerHTML = `${state.temperatureF}&deg;`;
+  setTemp();
   document.getElementById("city-name").textContent = state.cityName;
   checkTextColorChange();
   checkSeasonChange();
@@ -207,6 +207,14 @@ const updateUI = () => {
   setSky();
   setWeatherDescription();
   console.log('successfully updated UI!');
+}
+
+const setTemp = () => {
+  if (state.tempMetric === "F"){
+    document.getElementById("temp").innerHTML = `${Math.round(state.temperatureF)}&deg;`;
+  }else{
+    document.getElementById("temp").innerHTML = `${Math.round(state.temperatureC)}&deg;`;
+  }
 }
 
 const setSky = () => {
