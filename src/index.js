@@ -116,8 +116,13 @@ const displayWeatherAtLocation = () => {
 document.addEventListener('DOMContentLoaded', () => {registerEventHandlers(); displayWeatherAtLocation();});
 
 const changeTemp = (change) => {
-  state.temperatureF += change
-  state.temperatureC = FToC(state.temperatureF)
+  if (state.tempMetric === "F"){
+    state.temperatureF += change
+    state.temperatureC = FToC(state.temperatureF)
+  }else{
+    state.temperatureC += change
+    state.temperatureF = CToF(state.temperatureC)
+  }
   setTemp();
   checkTextColorChange();
   checkSeasonChange();
@@ -140,7 +145,7 @@ const checkSeasonChange = () => {
 const checkTextColorChange = () => {
   if (state.temperatureF <= 49){
     document.getElementById("temp").style.color = "teal";
-  }else if (state.temperatureF >= 50 && state.temperatureF < 60){
+  }else if (state.temperatureF > 49 && state.temperatureF < 60){
     document.getElementById("temp").style.color = "green";
   }else if (state.temperatureF >= 60 && state.temperatureF < 70){
     document.getElementById("temp").style.color = "yellow";
