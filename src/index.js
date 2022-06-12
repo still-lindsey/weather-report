@@ -95,8 +95,6 @@ const displayWeatherAtLocation = () => {
           state.cityName = cityResponse.data.address.city || cityResponse.data.address.region || cityResponse.data.address.county
           //Update UI
           updateUI();
-          console.log('successfully updated UI!');
-
         })
         .catch((error) => {
           console.log("error with getting city", error)
@@ -154,7 +152,7 @@ const checkTextColorChange = () => {
 };
 
 const changeCity = () => {
-  state.cityName = document.getElementById("city-search-input").value || state.cityName;
+  state.cityName = document.getElementById("city-search-input").value;
   document.getElementById("city-name").textContent = state.cityName;
 };
 
@@ -172,7 +170,7 @@ const changeWeatherAsync = async () => {
     });
     const lat = response.data[0].lat;
     const lon = response.data[0].lon;
-    console.log('success!', response.data);
+    console.log('successfully got lat and lon!', response.data);
     try{
       let weatherResponse = await axios.get("https://weather-report-server.herokuapp.com/weather", {
         params: {
@@ -202,7 +200,7 @@ const updateState = (weatherResponse) => {
 
 const updateUI = () => {
   document.getElementById("temp").innerHTML = `${state.temperatureF}&deg;`;
-  changeCity();
+  document.getElementById("city-name").textContent = state.cityName;
   checkTextColorChange();
   checkSeasonChange();
   setWeatherIcon();
