@@ -3,14 +3,13 @@ import 'regenerator-runtime/runtime';
 import axios from 'axios';
 
 const registerEventHandlers = () => {
-  document.addEventListener('DOMContentLoaded', displayWeatherAtLocation);
+  document.addEventListener('DOMContentLoaded', displayWeatherAtLocationAsync);
   document.getElementById("down-temp").addEventListener('click', () => changeTemp(-1));
   document.getElementById("up-temp").addEventListener('click', () => changeTemp(1));
   document.getElementById("city-search-input").addEventListener("search", changeCity)
   document.getElementById("city-search-input").addEventListener("search", changeWeatherAsync);
   document.getElementById("selected-location").addEventListener("click", changeWeatherAsync);
-  document.getElementById("current-location").addEventListener("click", displayWeatherAtLocation);
-  document.getElementById("city-search-button").addEventListener("click", toggleFunction)
+  document.getElementById("current-location").addEventListener("click", displayWeatherAtLocationAsync);
   const skyConditions = document.getElementsByClassName("weather-dropdown-item");
   for (const condition of skyConditions){
     condition.addEventListener("click", () => toggleSky(condition.textContent))
@@ -19,22 +18,22 @@ const registerEventHandlers = () => {
 };
 
 const FToC = (F) => {
-  return (F - 32) * .5556
-} 
+  return (F - 32) * .5556;
+};
 
 const CToF = (C) => {
-  return (C * 1.8) + 32
-} 
+  return (C * 1.8) + 32;
+};
 
 const switchFAndC = () => {
   if (state.tempMetric === "F"){
-    state.tempMetric = "C"
+    state.tempMetric = "C";
     setTemp();
   }else{
-    state.tempMetric = "F"
+    state.tempMetric = "F";
     setTemp();
   }
-}
+};
 
 const imgObject = {
   rainSky: require('/ada-project-docs/assets/rain_sky.jpg'), 
@@ -62,66 +61,60 @@ const state = {
   landscapeImg: imgObject['springLandscape'],
   currentLat: null,
   currentLon: null 
-}
+};
 
-const weatherMainToIcon = {"THUNDERSTORM": ["bi-cloud-lightning-rain", imgObject['thunderstormSky']], "DRIZZLE": ["bi-cloud-drizzle", imgObject['rainSky']], "RAIN": ["bi-cloud-rain", imgObject['rainSky']], "SNOW": ["bi-cloud-snow", imgObject['snowSky']], "MIST": ["bi-cloud-haze", imgObject['mistSky']], "SMOKE": ["bi-cloud-fog", imgObject['mistSky']], "HAZE": ["bi-cloud-haze", imgObject['mistSky']], "DUST": ["bi-cloud-fog", imgObject['mistSky']], "FOG": ["bi-cloud-haze", imgObject['mistSky']], "SAND": ["bi-cloud-fog", imgObject['mistSky']], "DUST": ["bi-cloud-fog", imgObject['mistSky']], "ASH": ["bi-cloud-fog", imgObject['mistSky']], "SQUALL": ["bi-cloud-fog", imgObject['mistSky']], "TORNADO": ["bi-cloud-fog", imgObject['mistSky']], "CLEAR": ["bi-sun", imgObject['clearSky']], "CLOUDS": ['bi-clouds', imgObject['cloudsSky']]}
+const weatherMainToIcon = {"THUNDERSTORM": ["bi-cloud-lightning-rain", imgObject['thunderstormSky']], "DRIZZLE": ["bi-cloud-drizzle", imgObject['rainSky']], "RAIN": ["bi-cloud-rain", imgObject['rainSky']], "SNOW": ["bi-cloud-snow", imgObject['snowSky']], "MIST": ["bi-cloud-haze", imgObject['mistSky']], "SMOKE": ["bi-cloud-fog", imgObject['mistSky']], "HAZE": ["bi-cloud-haze", imgObject['mistSky']], "DUST": ["bi-cloud-fog", imgObject['mistSky']], "FOG": ["bi-cloud-haze", imgObject['mistSky']], "SAND": ["bi-cloud-fog", imgObject['mistSky']], "DUST": ["bi-cloud-fog", imgObject['mistSky']], "ASH": ["bi-cloud-fog", imgObject['mistSky']], "SQUALL": ["bi-cloud-fog", imgObject['mistSky']], "TORNADO": ["bi-cloud-fog", imgObject['mistSky']], "CLEAR": ["bi-sun", imgObject['clearSky']], "CLOUDS": ['bi-clouds', imgObject['cloudsSky']]};
 
-const displayWeatherAtLocation = () => {
-
-  navigator.geolocation.getCurrentPosition((position) => {
-    state.currentLat = position.coords.latitude;
-    state.currentLon = position.coords.longitude;
-    console.log("got geolocation", position)
-    axios.get("https://weather-report-server.herokuapp.com/weather", {
+const displayWeatherAtLocationAsync = () => {
+  navigator.geolocation.getCurrentPosition(async (position) => {
+  state.currentLat = position.coords.latitude;
+  state.currentLon = position.coords.longitude;
+  console.log("got geolocation", position)
+  try {
+    let weatherResponse = await axios.get("https://weather-report-server.herokuapp.com/weather", {
+      params: {
+        lat: state.currentLat,
+        lon: state.currentLon
+      },
+    });
+    updateState(weatherResponse);
+    console.log('successfully stored response data!', weatherResponse.data);
+    try{
+      let cityResponse = await axios.get("https://weather-report-server.herokuapp.com/city", {
         params: {
           lat: state.currentLat,
           lon: state.currentLon
         },
-      })
-      .then((weatherResponse) => {
-        //Store response data
-        updateState(weatherResponse);
-        console.log('successfully stored response data!', weatherResponse.data);
-        axios.get("https://weather-report-server.herokuapp.com/city", {
-          params: {
-            lat: state.currentLat,
-            lon: state.currentLon
-          },
-        })
-        .then((cityResponse) => {
-          console.log("got the city name", cityResponse.data)
-
-          state.cityName = cityResponse.data.address.city || cityResponse.data.address.region || cityResponse.data.address.county
-          //Update UI
-          updateUI();
-        })
-        .catch((error) => {
-          console.log("error with getting city", error)
-        });
-      })
-      .catch((error) => {
-        console.log('error!', error)
       });
+      console.log("got the city name", cityResponse.data);
+      state.cityName = cityResponse.data.address.city || cityResponse.data.address.region || cityResponse.data.address.county;
+      updateUI();
+    }catch(error){
+      console.log("error with getting city", error);
+    };
+  }catch(error){
+    console.log('error with getting weather!', error);
+  };
   }, (error) => {
     if (error.code === error.PERMISSION_DENIED) {
-      state.weatherIconName = "bi-clouds"
+      state.weatherIconName = "bi-clouds";
       updateUI();
       console.log("Location permission denied");
       setTimeout(() => 
-      window.alert("Enable browser location access or type your city/region in the dropdown search to access current local weather information."), 2000)
+      window.alert("Enable browser location access or type your city/region in the dropdown search to access current local weather information."), 2000);
     };
   });
 };
 
-document.addEventListener('DOMContentLoaded', () => {registerEventHandlers(); displayWeatherAtLocation();});
+document.addEventListener('DOMContentLoaded', () => {registerEventHandlers(); displayWeatherAtLocationAsync();});
 
 const changeTemp = (change) => {
   if (state.tempMetric === "F"){
-    state.temperatureF += change
-    state.temperatureC = FToC(state.temperatureF)
+    state.temperatureF += change;
+    state.temperatureC = FToC(state.temperatureF);
   }else{
-    state.temperatureC += change
-    state.temperatureF = CToF(state.temperatureC)
+    state.temperatureC += change;
+    state.temperatureF = CToF(state.temperatureC);
   }
   setTemp();
   checkTextColorChange();
@@ -161,10 +154,6 @@ const changeCity = () => {
   document.getElementById("city-name").textContent = state.cityName;
 };
 
-const toggleFunction = () => {
-  document.getElementById("city-search-button").classList.toggle("show");
-}
-
 const changeWeatherAsync = async () => {
   const q = state.cityName;
   try{
@@ -186,22 +175,22 @@ const changeWeatherAsync = async () => {
         updateState(weatherResponse);
         updateUI();
       }catch(error){
-        console.log('weather error!', error)
+        console.log('weather error!', error);
       }
   }catch(error){
-    console.log('location error', error)
+    console.log('location error', error);
   };
 };
 
 const updateState = (weatherResponse) => {
-  state.temperatureF = Math.round(weatherResponse.data.current.temp);
+  state.temperatureF = weatherResponse.data.current.temp;
   state.temperatureC = FToC(state.temperatureF);
   state.weatherDescription = weatherResponse.data.current.weather[0].description;
   state.oldIconName = state.weatherIconName;
   state.weatherIconName = weatherMainToIcon[weatherResponse.data.current.weather[0].main.toUpperCase()][0];
   state.skyImg = weatherMainToIcon[weatherResponse.data.current.weather[0].main.toUpperCase()][1];
   console.log('successfully stored response data!', weatherResponse.data);
-}
+};
 
 const updateUI = () => {
   setTemp();
@@ -212,27 +201,28 @@ const updateUI = () => {
   setSky();
   setWeatherDescription();
   console.log('successfully updated UI!');
-}
+};
 
 const setTemp = () => {
   if (state.tempMetric === "F"){
     document.getElementById("temp").innerHTML = `${Math.round(state.temperatureF)}&deg;`;
   }else{
     document.getElementById("temp").innerHTML = `${Math.round(state.temperatureC)}&deg;`;
-  }
-}
+  };
+};
 
 const setSky = () => {
   document.body.style.background = `url(${state.skyImg}) no-repeat top fixed`;
   document.body.style.backgroundSize = '100% 100%';
-}
+};
+
 const setWeatherIcon = () => {
   document.getElementsByClassName("weather-icon")[1].classList.replace(state.oldIconName, state.weatherIconName);
-}
+};
 
 const setWeatherDescription = () => {
   document.getElementById("wdescription").textContent = state.weatherDescription;
-}
+};
 
 const toggleSky = (condition) => {
   state.weatherDescription = condition; 
@@ -243,6 +233,9 @@ const toggleSky = (condition) => {
   state.weatherIconName = weatherMainToIcon[condition.toUpperCase()][0];
   setWeatherIcon();
 };
+
+//Promise Chaining Versions (non-await)
+
 // const changeWeather = () => {
 //   const q = state.cityName;
 
@@ -286,5 +279,51 @@ const toggleSky = (condition) => {
 //   })
 //   .catch((error) => {
 //     console.log('error!', error)
+//   });
+// }
+
+// const displayWeatherAtLocation = () => {
+//   navigator.geolocation.getCurrentPosition((position) => {
+//     state.currentLat = position.coords.latitude;
+//     state.currentLon = position.coords.longitude;
+//     console.log("got geolocation", position)
+//     axios.get("https://weather-report-server.herokuapp.com/weather", {
+//         params: {
+//           lat: state.currentLat,
+//           lon: state.currentLon
+//         },
+//       })
+//       .then((weatherResponse) => {
+//         //Store response data
+//         updateState(weatherResponse);
+//         console.log('successfully stored response data!', weatherResponse.data);
+//         axios.get("https://weather-report-server.herokuapp.com/city", {
+//           params: {
+//             lat: state.currentLat,
+//             lon: state.currentLon
+//           },
+//         })
+//         .then((cityResponse) => {
+//           console.log("got the city name", cityResponse.data)
+
+//           state.cityName = cityResponse.data.address.city || cityResponse.data.address.region || cityResponse.data.address.county
+//           //Update UI
+//           updateUI();
+//         })
+//         .catch((error) => {
+//           console.log("error with getting city", error)
+//         });
+//       })
+//       .catch((error) => {
+//         console.log('error!', error)
+//       });
+//   }, (error) => {
+//     if (error.code === error.PERMISSION_DENIED) {
+//       state.weatherIconName = "bi-clouds"
+//       updateUI();
+//       console.log("Location permission denied");
+//       setTimeout(() => 
+//       window.alert("Enable browser location access or type your city/region in the dropdown search to access current local weather information."), 2000)
+//     };
 //   });
 // }
