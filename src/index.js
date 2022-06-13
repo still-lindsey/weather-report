@@ -59,8 +59,8 @@ const state = {
   oldIconName: "none",
   skyImg: imgObject['cloudsSky'],
   landscapeImg: imgObject['springLandscape'],
-  currentLat: null,
-  currentLon: null 
+  currentLat: 35.604,
+  currentLon: 139.7248 
 };
 
 const weatherMainToIcon = {"THUNDERSTORM": ["bi-cloud-lightning-rain", imgObject['thunderstormSky']], "DRIZZLE": ["bi-cloud-drizzle", imgObject['rainSky']], "RAIN": ["bi-cloud-rain", imgObject['rainSky']], "SNOW": ["bi-cloud-snow", imgObject['snowSky']], "MIST": ["bi-cloud-haze", imgObject['mistSky']], "SMOKE": ["bi-cloud-fog", imgObject['mistSky']], "HAZE": ["bi-cloud-haze", imgObject['mistSky']], "DUST": ["bi-cloud-fog", imgObject['mistSky']], "FOG": ["bi-cloud-haze", imgObject['mistSky']], "SAND": ["bi-cloud-fog", imgObject['mistSky']], "DUST": ["bi-cloud-fog", imgObject['mistSky']], "ASH": ["bi-cloud-fog", imgObject['mistSky']], "SQUALL": ["bi-cloud-fog", imgObject['mistSky']], "TORNADO": ["bi-cloud-fog", imgObject['mistSky']], "CLEAR": ["bi-sun", imgObject['clearSky']], "CLOUDS": ['bi-clouds', imgObject['cloudsSky']]};
@@ -70,31 +70,10 @@ const displayWeatherAtLocationAsync = () => {
   state.currentLat = position.coords.latitude;
   state.currentLon = position.coords.longitude;
   console.log("got geolocation", position)
-  try {
-    let weatherResponse = await axios.get("https://weather-report-server.herokuapp.com/weather", {
-      params: {
-        lat: state.currentLat,
-        lon: state.currentLon
-      },
-    });
-    updateState(weatherResponse);
-    console.log('successfully stored response data!', weatherResponse.data);
-    try{
-      let cityResponse = await axios.get("https://weather-report-server.herokuapp.com/city", {
-        params: {
-          lat: state.currentLat,
-          lon: state.currentLon
-        },
-      });
-      console.log("got the city name", cityResponse.data);
-      state.cityName = cityResponse.data.address.city || cityResponse.data.address.region || cityResponse.data.address.county;
-      updateUI();
-    }catch(error){
-      console.log("error with getting city", error);
-    };
-  }catch(error){
-    console.log('error with getting weather!', error);
-  };
+  const weatherResponse = await getWeather(state.currentLat, state.currentLon);
+  updateState(weatherResponse);
+  state.cityName = await getCityName();
+  updateUI();
   }, (error) => {
     if (error.code === error.PERMISSION_DENIED) {
       state.weatherIconName = "bi-clouds";
@@ -104,6 +83,21 @@ const displayWeatherAtLocationAsync = () => {
       window.alert("Enable browser location access or type your city/region in the dropdown search to access current local weather information."), 2000);
     };
   });
+};
+
+const getCityName = async () => {
+  try{
+    const cityResponse = await axios.get("https://weather-report-server.herokuapp.com/city", {
+      params: {
+        lat: state.currentLat,
+        lon: state.currentLon
+      },
+    });
+    console.log("got the city name", cityResponse.data);
+    return cityResponse.data.address.city || cityResponse.data.address.region || cityResponse.data.address.county;
+  }catch(error){
+    console.log("error with getting city", error);
+  };
 };
 
 document.addEventListener('DOMContentLoaded', () => {registerEventHandlers(); displayWeatherAtLocationAsync();});
@@ -156,30 +150,39 @@ const changeCity = () => {
 
 const changeWeatherAsync = async () => {
   const q = state.cityName;
+  const {lat, lon} = await getLatLon(q);
+  const weatherResponse = await getWeather(lat, lon)
+  updateState(weatherResponse);
+  updateUI();
+};
+
+const getLatLon = async (q) => {
   try{
-    let response = await axios.get("https://weather-report-server.herokuapp.com/location", {
+    const response = await axios.get("https://weather-report-server.herokuapp.com/location", {
       params: {
         q
       }
-    });
-    const lat = response.data[0].lat;
-    const lon = response.data[0].lon;
+    });  
     console.log('successfully got lat and lon!', response.data);
-    try{
-      let weatherResponse = await axios.get("https://weather-report-server.herokuapp.com/weather", {
-        params: {
-          lat,
-          lon
-        }
-      });
-        updateState(weatherResponse);
-        updateUI();
-      }catch(error){
-        console.log('weather error!', error);
-      }
+    return {lat: response.data[0].lat, lon: response.data[0].lon};
   }catch(error){
     console.log('location error', error);
   };
+};
+
+const getWeather = async (lat, lon) => {
+  try{
+    const response = await axios.get("https://weather-report-server.herokuapp.com/weather", {
+      params: {
+        lat,
+        lon
+      }
+    });
+    console.log('successfully got lat and lon!', response.data);
+    return response;
+  }catch(error){
+    console.log('weather error!', error);
+  }
 };
 
 const updateState = (weatherResponse) => {
