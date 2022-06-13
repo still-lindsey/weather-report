@@ -6,7 +6,7 @@ const registerEventHandlers = () => {
   document.addEventListener('DOMContentLoaded', displayWeatherAtLocationAsync);
   document.getElementById("down-temp").addEventListener('click', () => changeTemp(-1));
   document.getElementById("up-temp").addEventListener('click', () => changeTemp(1));
-  document.getElementById("city-search-input").addEventListener("search", changeCity)
+  document.getElementById("city-search-input").addEventListener("keyup", changeCity)
   document.getElementById("city-search-input").addEventListener("search", changeWeatherAsync);
   document.getElementById("selected-location").addEventListener("click", changeWeatherAsync);
   document.getElementById("current-location").addEventListener("click", displayWeatherAtLocationAsync);
