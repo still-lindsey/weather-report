@@ -188,7 +188,7 @@ input{
 	justify-content: center;
 	align-content: center;
 	min-width: 7vw;
-    max-width: 12vw;
+    max-width: fit-content;
     width: auto;
 }
 
